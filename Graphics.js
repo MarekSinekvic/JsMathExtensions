@@ -429,7 +429,7 @@ class UIInput {
 		this.DrawText();
 	}
 }
-class NewGraph {
+class Graph {
 	constructor(DrawPosition, Width, Height, ScaleX, ScaleY) {
 		this.position = DrawPosition;
 		this.size = [Width, Height];
@@ -437,7 +437,7 @@ class NewGraph {
 		this.scale = [ScaleX, ScaleY];
 
 		this.data = []; // [{color:"red", name:"Animals count", data: [], bounded: 100}, ...], data: [{x: 0, y: 1}, style: "line"]
-		this.equations = []; // [{color:"Red",name:"sin wave", func: (x)=>{}, style: "line"}];
+		this.equations = []; // [{color:"Red",name:"sin wave", bounds: undefined | [-100,100], func: (x)=>{}, style: "line"}];
 		this.vectorField = undefined; // (x,y) => {return [x,y]; };
 		this.colorField = undefined; // (x,y) => {return [r,g,b]; };
 
@@ -789,10 +789,9 @@ class NewGraph {
 				// if ((Math.abs(pos[0]-this.centere[0]) > this.size[0]/2) || (Math.abs(pos[1]-this.centere[1]) > this.size[1]/2)) continue;
 				if (pos[1] <= this.position[1] || pos[1] >= this.position[1]+this.size[1] ||
 					pos[0] <= this.position[0] || pos[0] >= this.position[0]+this.size[0]
-				) {
-					
-					continue;
-				}
+				) continue;
+
+				if (funcX < this.equations[i].bounds[0] || funcX > this.equations[i].bounds[1]) continue;
 
 				let dst = math.distanceToLine([input.mouse.x,input.mouse.y], pastPos, pos);
 
