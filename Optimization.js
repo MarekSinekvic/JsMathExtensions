@@ -270,9 +270,12 @@ class Node {
         this.value = Value;
         this.inputs = Inputs;
         this.addicted = [];
-        this.deriative = [];
+        this.deriative = 0;
 
         this.posInArray = [];
+
+        this.moment1 = [];
+        this.moment2 = [];
 
         this.isBias = false;
 
@@ -390,51 +393,69 @@ class NeuroWeb {
         }
         return Math.sqrt(sum);
     }
-    getWeightsDeriatives(InitDeriatives = undefined) {
-        for (let row = this.nodes.length-1; row >= 0; row--) {
-            for (let n = 0; n < this.nodes[row].length; n++) {
-                this.nodes[row][n].deriative = [];
-                for (let o = 0; o < this.nodes[this.nodes.length-1].length; o++) {
-                    this.nodes[row][n].deriative.push(1);
-                    // this.nodes[row][n].deriative.push((this.expectedOutputs[o]-this.nodes[this.nodes.length-1][o].value));
-                }
-            }
-        }
-
-        if (typeof InitDeriatives !== "undefined") {
+    getWeightsDeriatives(initDeriatives = []) {
+        // for (let row = this.nodes.length-1; row >= 0; row--) {
+        //     for (let n = 0; n < this.nodes[row].length; n++) {
+        //         this.nodes[row][n].deriative = [];
+        //         for (let o = 0; o < this.nodes[this.nodes.length-1].length; o++) {
+        //             this.nodes[row][n].deriative.push(1);
+        //             // this.nodes[row][n].deriative.push((this.expectedOutputs[o]-this.nodes[this.nodes.length-1][o].value));
+        //         }
+        //     }
+        // }
+        
+        // /*if (typeof InitDeriatives !== "undefined") {
             
-            for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++)
-                for (let o = 0; o < InitDeriatives.length; o++) 
-                        this.nodes[this.nodes.length-1][out].deriative[o] = (InitDeriatives[out][o]);
+        //     for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++)
+        //         for (let o = 0; o < InitDeriatives.length; o++) 
+        //                 this.nodes[this.nodes.length-1][out].deriative[o] = (InitDeriatives[out][o]);
                 
+        // }*/
+        
+        // for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++) {
+        //     for (let i = 0; i < this.nodes[this.nodes.length-1][out].inputs.length; i++) {
+        //         // if (this.activationFunc == "sigma")
+        //             // this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight*(this.nodes[this.nodes.length-1][out].value*(1-this.nodes[this.nodes.length-1][out].value))*(this.nodes[this.nodes.length-1][out].inputs[i].node.value*(1-this.nodes[this.nodes.length-1][out].inputs[i].node.value));
+        //         // else if (this.activationFunc == "relu") {
+        //         //     this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
+        //         //     if (this.nodes[this.nodes.length-1][out].inputs[i].weight < 0) this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = 0;
+        //         // } else
+        //         //     this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
+        //         this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight * this.nodes[this.nodes.length-1][out].activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value)//*this.nodes[this.nodes.length-1][out].inputs[i].node.activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value);
+        //         // this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
+        //         this.nodes[this.nodes.length-1][out].inputs[i].node.newDeriative = this.nodes[this.nodes.length-1][out].newDeriative * this.nodes[this.nodes.length-1][out].inputs[i].weight * this.nodes[this.nodes.length-1][out].activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value);
+        //         // console.log(outputsDelta[out]);
+                
+        //     }
+        //     for (let row = this.nodes.length-1; row >= 0; row--) {
+                
+        //         for (let n = 0; n < this.nodes[row].length; n++) {
+        //             // this.nodes[row][n].deriative[out] *= 2 * this.nodes[row][n].clearValue;
+        //             // if (this.activationFunc == "sigma")
+        //                 // this.nodes[row][n].deriative[out] *= this.nodes[row][n].value*(1-this.nodes[row][n].value);
+        //             // else if (this.activationFunc == "relu") {
+        //             //     if (this.nodes[row][n].value < 0) this.nodes[row][n].deriative[out] = 0;
+        //             // }                    
+        //             this.nodes[row][n].deriative[out] *= this.nodes[row][n].activationFuncDer(this.nodes[row][n].value);
+        //             //this.nodes[row][n].newDeriative *= this.nodes[row][n].activationFuncDer(this.nodes[row][n].value);
+        //             for (let i = 0; i < this.nodes[row][n].inputs.length; i++) {
+        //                 this.nodes[row][n].inputs[i].node.deriative[out] += this.nodes[row][n].deriative[out] * this.nodes[row][n].inputs[i].weight;
+        //                 //this.nodes[row][n].inputs[i].node.newDeriative += this.nodes[row][n].newDeriative * this.nodes[row][n].inputs[i].weight;
+        //             }
+        //         }
+        //     }
+        // }
+        
+        for (let n = 0; n < this.nodes[this.nodes.length-1].length; n++) {
+            this.nodes[this.nodes.length-1][n].deriative = initDeriatives[n];
         }
-
-        for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++) {
-            for (let i = 0; i < this.nodes[this.nodes.length-1][out].inputs.length; i++) {
-                // if (this.activationFunc == "sigma")
-                    // this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight*(this.nodes[this.nodes.length-1][out].value*(1-this.nodes[this.nodes.length-1][out].value))*(this.nodes[this.nodes.length-1][out].inputs[i].node.value*(1-this.nodes[this.nodes.length-1][out].inputs[i].node.value));
-                // else if (this.activationFunc == "relu") {
-                //     this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
-                //     if (this.nodes[this.nodes.length-1][out].inputs[i].weight < 0) this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = 0;
-                // } else
-                //     this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
-                this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight * this.nodes[this.nodes.length-1][out].activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value)//*this.nodes[this.nodes.length-1][out].inputs[i].node.activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value);
-                // this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[out] = this.nodes[this.nodes.length-1][out].inputs[i].weight;
-                
-            }
-            for (let row = this.nodes.length-1; row >= 0; row--) {
-                
-                for (let n = 0; n < this.nodes[row].length; n++) {
-                    // this.nodes[row][n].deriative[out] *= 2 * this.nodes[row][n].clearValue;
-                    // if (this.activationFunc == "sigma")
-                        // this.nodes[row][n].deriative[out] *= this.nodes[row][n].value*(1-this.nodes[row][n].value);
-                    // else if (this.activationFunc == "relu") {
-                    //     if (this.nodes[row][n].value < 0) this.nodes[row][n].deriative[out] = 0;
-                    // }                    
-                    this.nodes[row][n].deriative[out] *= this.nodes[row][n].activationFuncDer(this.nodes[row][n].value);
-                    for (let i = 0; i < this.nodes[row][n].inputs.length; i++) {
-                        this.nodes[row][n].inputs[i].node.deriative[out] += this.nodes[row][n].deriative[out] * this.nodes[row][n].inputs[i].weight;
-                    }
+        for (let row = this.nodes.length-1; row >= 0; row--) {
+            
+            for (let n = 0; n < this.nodes[row].length; n++) {        
+                if (row < this.nodes.length-1)
+                    this.nodes[row][n].deriative *= this.nodes[row][n].activationFuncDer(this.nodes[row][n].value); 
+                for (let i = 0; i < this.nodes[row][n].inputs.length; i++) {
+                    this.nodes[row][n].inputs[i].node.deriative = this.nodes[row][n].deriative * this.nodes[row][n].inputs[i].weight;
                 }
             }
         }
@@ -455,104 +476,23 @@ class NeuroWeb {
             }
         }
     }
-    chainTrain(deltaError, outputsDelta, initDeriatives) {        
-        this.getOutputs();
-        // this.getWeightsDeriatives(initDeriatives);
-        
-        for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++) {
-            for (let o = 0; o < initDeriatives[out].length; o++) 
-                this.nodes[this.nodes.length-1][out].deriative[o] = (initDeriatives[out][o]);
-        }
-        for (let out = 0; out < this.nodes[this.nodes.length-1].length; out++) {
-            for (let i = 0; i < this.nodes[this.nodes.length-1][out].inputs.length; i++) {
-                for (let o = 0; o < initDeriatives[0].length; o++) {
-                    this.nodes[this.nodes.length-1][out].inputs[i].node.deriative[o] = this.nodes[this.nodes.length-1][out].inputs[i].weight * this.nodes[this.nodes.length-1][out].activationFuncDer(this.nodes[this.nodes.length-1][out].inputs[i].node.value);
-                }
-            }
-        }
+    GetOutsSubtraction(expected) {return this.nodes[this.nodes.length-1].map((v,i)=>(expected[i]-v.value));}
+    GradientStep(deltaError, initDeriatives = null) {
+        if (initDeriatives == null) initDeriatives = this.expectedOutputs;
+        else this.expectedOutputs = initDeriatives;
 
-        for (let out = 0; out < initDeriatives[0].length; out++) {
-            
-            for (let row = this.nodes.length-1; row >= 0; row--) {
-                
-                for (let n = 0; n < this.nodes[row].length; n++) {           
-                    // if (row != this.nodes.length-1)
-                        this.nodes[row][n].deriative[out] *= this.nodes[row][n].activationFuncDer(this.nodes[row][n].value);
-                    
-                    for (let i = 0; i < this.nodes[row][n].inputs.length; i++) {
-                        this.nodes[row][n].inputs[i].node.deriative[out] = this.nodes[row][n].deriative[out] * this.nodes[row][n].inputs[i].weight;
-                    }
-                }
-            }
-        }
-        
+        this.getWeightsDeriatives(initDeriatives);
         
         for (let i = 0; i < this.nodes.length; i++) {
             for (let j = 0; j < this.nodes[i].length; j++) {
                 for (let k = 0; k < this.nodes[i][j].inputs.length; k++) {
 
-                    let v = 0, F = 0;
-                    for (let o = 0; o < initDeriatives[0].length; o++) {
-                        F += outputsDelta[o]*this.nodes[i][j].deriative[o];
-                    };
-                    v = F*this.nodes[i][j].inputs[k].node.value * deltaError;
-                    
-                    // if (v==0) console.log('test');
-                    if (isNaN(v)) {
-                        // console.log("V is nan");
-                        return;
-                    }
-                    
-                    if (this.nodes[i][j].inputs[k].linkedInputs.length > 0)
-                        v/=this.nodes[i][j].inputs[k].linkedInputs.length;
-
-                    this.nodes[i][j].inputs[k].weight += v;
-                    for (let l = 0; l < this.nodes[i][j].inputs[k].linkedInputs.length; l++) {
-                        let linkInps = this.nodes[i][j].inputs[k].linkedInputs[l];
-
-                        linkInps.weight += v;
-                    }
-                }
-            }
-        }
-    }
-    oneIterTrain(deltaError, expectedOutputs = null) {
-        if (expectedOutputs == null) {
-            expectedOutputs = this.expectedOutputs;
-        } else {
-            this.expectedOutputs = expectedOutputs;
-        }
-        this.getOutputs();
-        // let E = this.getSumError(expectedOutputs);
-        // if (E == 0) return;
-        this.getWeightsDeriatives();
-        
-        for (let i = 0; i < this.nodes.length; i++) {
-            for (let j = 0; j < this.nodes[i].length; j++) {
-                for (let k = 0; k < this.nodes[i][j].inputs.length; k++) {
-
-                    let v = 0;
-                    if (i == this.nodes.length-1) {
-                        let F = 0;
-                        for (let o = 0; o < this.nodes[this.nodes.length-1].length; o++) {
-                            if (o == j) 
-                                F += (expectedOutputs[o]-this.nodes[this.nodes.length-1][o].value)*this.nodes[i][j].deriative[o];
-                        };
-                        v = F*this.nodes[i][j].inputs[k].node.value*deltaError;
-                    } else {
-                        let F = 0;
-                        for (let o = 0; o < this.nodes[this.nodes.length-1].length; o++) {
-                            F += (expectedOutputs[o]-this.nodes[this.nodes.length-1][o].value)*this.nodes[i][j].deriative[o];
-                        };
-                        v = F*this.nodes[i][j].inputs[k].node.value * deltaError; //  * this.nodes[i][j].inputs[k].conductivity //   / (0.5+E)
-                    }
+                    let v = this.nodes[i][j].deriative*this.nodes[i][j].inputs[k].node.value * deltaError;; //  * this.nodes[i][j].inputs[k].conductivity //   / (0.5+E)
                     if (isNaN(v)) return;
                     
                     if (this.nodes[i][j].inputs[k].linkedInputs.length > 0)
                         v/=this.nodes[i][j].inputs[k].linkedInputs.length;
-                    // if (Math.abs(v) > 10e5) {
-                    //     break;
-                    // }
+
                     this.nodes[i][j].inputs[k].weight += v;
                     for (let l = 0; l < this.nodes[i][j].inputs[k].linkedInputs.length; l++) {
                         let linkInps = this.nodes[i][j].inputs[k].linkedInputs[l];
@@ -562,7 +502,6 @@ class NeuroWeb {
 
                     // let cond = Math.pow(2,-conductivityDecrease*(v**2));
                     // this.nodes[i][j].inputs[k].conductivity *= cond;
-
 
                     // // this.nodes[i][j].inputs[k].weight += F/(2*E) * deltaError * this.nodes[i][j].inputs[k].node.value* this.nodes[i][j].inputs[k].conductivity;
                     // let v = F*this.nodes[i][j].inputs[k].node.value;
@@ -577,31 +516,46 @@ class NeuroWeb {
             }
         }
     }
-    asyncTrainWeb(deltaError, targetOutput, minError = 0.1, deltaTime = 1000/20) { //this.oneIterTrain(deltaError,targetOutput)
-        this.DestroyAsyncTrainer();
-        let iteration = 0;
-        this.asyncTrainerId = setInterval(()=> {
-            let E = this.oneIterTrain(deltaError,targetOutput);
-            if (E < minError) {
-                clearInterval(this.asyncTrainerId);
-                this.asyncTrainerId = null;
+    Adam(Iterations, LearningRate, Targets, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-8, optionalDeriatives = null) {
+        let m1 = [];
+        let m2 = [];
+        for (let i = 0; i < this.nodes.length; i++) {
+            m1.push([]);
+            m2.push([]);
+            for (let j = 0; j < this.nodes[i].length; j++) {
+                m1[i].push([]);
+                m2[i].push([]);
+                for (let k = 0; k < this.nodes[i][j].inputs.length; k++) {
+                    m1[i][j].push(0);
+                    m2[i][j].push(0);
+                }
             }
-            if (isNaN(E)) {
-                this.Reset();
-                clearInterval(this.asyncTrainerId);
-                this.asyncTrainerId = null;
-            }
-            iteration++;
-        }, deltaTime);
-    }
-    DestroyAsyncTrainer() {
-        clearInterval(this.asyncTrainerId);
-        this.asyncTrainerId = null;
-    }
-    trainWeb(deltaError, maxIters, expectedOutputs) {
-        for (let n = 0; n < maxIters; n++) {
-             this.oneIterTrain(deltaError, expectedOutputs);
         }
+        
+        let t = 0;
+        while (t < Iterations) {
+            t++;
+            for (let i = 0; i < Targets.length; i++) {
+                this.getOutputs(Targets[i][0]);
+                if (!optionalDeriatives) this.getWeightsDeriatives(this.GetOutsSubtraction(Targets[i][1]));
+                else this.getWeightsDeriatives(optionalDeriatives);
+                for (let i = 0; i < this.nodes.length; i++) {
+                    for (let j = 0; j < this.nodes[i].length; j++) {
+                        for (let k = 0; k < this.nodes[i][j].inputs.length; k++) {
+                            let g = this.nodes[i][j].deriative*this.nodes[i][j].inputs[k].node.value;
+                            m1[i][j][k] = beta1*m1[i][j][k] + (1-beta1)*g;
+                            m2[i][j][k] = beta2*m2[i][j][k] + (1-beta2)*g**2;
+                            let mHat = m1[i][j][k]/(1-beta1**t);
+                            let vHat = m2[i][j][k]/(1-beta2**t);
+                            this.nodes[i][j].inputs[k].weight += LearningRate*mHat/(vHat**0.5+epsilon);
+                        }
+                    }
+                }
+            }
+            //console.log(this.getSumError(Targets[0][1]));
+            
+        }
+
     }
     Reset(Random = 1) {
         for (let i = 0; i < this.nodes.length; i++) {
@@ -612,16 +566,6 @@ class NeuroWeb {
             }
         }
         this.getOutputs();
-    }
-    OutputsValuesToArray() {
-        let arr = [];
-        this.nodes[this.nodes.length-1].map((v,i)=>{arr.push(v.value);});
-        return arr;
-    }
-    InputsValuesToArray() {
-        let arr = [];
-        this.nodes[0].map((v,i)=>{arr.push(v.value);});
-        return arr;
     }
     ResetConductivity() {
         for (let i = 0; i < this.nodes.length; i++) {
@@ -682,34 +626,6 @@ class NeuroWeb {
         for (let i = 0; i < this.nodes[0].length - biasCount; i++) {
             let t = i / (this.nodes[0].length - 1 - biasCount);
             this.nodes[0][i].value = equation(minX + t * (maxX - minX));
-        }
-    }
-    parseWeightsAsString() {
-        let strWeights = "";
-        for (let i = 1; i < this.nodes.length; i++) {
-            for (let j = 0; j < this.nodes[i].length; j++) {
-                for (let k = 0; k < this.nodes[i][j].inputs.length; k++) {
-                    strWeights += this.nodes[i][j].inputs[k].weight;
-                    if (k!=this.nodes[i][j].inputs.length-1) strWeights+=',';
-                }
-                if (j != this.nodes[i].length-1)
-                    strWeights += '}';
-            }
-            if (i != this.nodes.length-1)
-                strWeights += ']';
-        }
-        return strWeights;
-    }
-    setWeightsFromString(str) {
-        let cols = str.split(']');
-        for (let i = 0; i < cols.length; i++) {
-            let nods = cols[i].split('}');
-            for (let j = 0; j < nods.length; j++) {
-                let inps = nods[j].split(',');
-                for (let k = 0; k < inps.length; k++) {
-                    this.nodes[i+1][j].inputs[k].weight = Number(inps[k]);
-                }
-            }
         }
     }
     _GetPositionByIndexes(i, j, r = 20) {
