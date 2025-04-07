@@ -1,4 +1,4 @@
-class TrainableParams3 {
+class TrainableParams {
 	GetInSortedSpace(coords) {
 		let fcoords = [...coords];
 		let flatInd = 0;
@@ -56,10 +56,11 @@ class TrainableParams3 {
 	}
 	constructor(params, scoreFunc, scoreDerFunc, dt = 0.1, coverArea = 0.5) {
 		this.DT=dt;
+		this.momentum = 0.95;
 		this.CoverArea = coverArea;
-		this.MinDeriative = 10e-10;
-		this.MinVelocity = 10e-4;
-		this.AgentsCount = 20;
+		this.MinDeriative = 10e-4;
+		this.MinVelocity = 10e-3;
+		this.AgentsCount = 8;
 		this.RandomPlaceDispersion = 10;
 		this.bounds = 80;
 
@@ -70,9 +71,11 @@ class TrainableParams3 {
 		this.params = [];
 
 		this.state = [];
+		this.onExtrema = [];
 		for (let i = 0; i < this.AgentsCount; i++) {
 			this.pastParams[i] = {};
 			this.params[i] = {};
+			this.onExtrema[i] = false;
 			for (let param in params) {
 				let R = (Math.random()-0.5)*2*5;
 				this.pastParams[i][param] = params[param]+R;
@@ -86,7 +89,6 @@ class TrainableParams3 {
 			this.coverSortedSpace.push([]);
 		}
 
-		this.onExtrema = false;
 
 		this.oldScore = 0;
 
@@ -129,14 +131,16 @@ class TrainableParams3 {
 		}
 		return y;
 	}
+	#gaussDistr = (x,a=1)=>{return Math.exp(-a*Math.PI*(x**2))}
 	PlaceOnRandomCover(targetIndex) {
-		if (this.cover.length == 0) return;
+		if (this.cover.length == 0) {
+			for (let param in this.params[targetIndex]) {this.params[targetIndex][param] += (-1+Math.random()*2)*1;}
+			return;
+		}
 
-		const gaussDistr = (x,a=1)=>{return Math.exp(-a*Math.PI*(x**2))}
-		let targetCover = Math.floor(gaussDistr(Math.random(),this.RandomPlaceDispersion)*(this.cover.length-1));
+		let targetCover = Math.floor(this.#gaussDistr(Math.random(),this.RandomPlaceDispersion)*(this.cover.length-1));
 		if (this.state[targetIndex] == -1) targetCover = this.cover.length-1 - targetCover;
 		// console.log(this.cover[0][2]);
-		
 		
 		let ind = 0;
 		for (let param in this.params[targetIndex]) {this.params[targetIndex][param] = this.cover[targetCover][0][ind]+(-1+Math.random()*2)*1; ind++}
@@ -150,12 +154,15 @@ class TrainableParams3 {
 		
 		let index = 0;
 		for (let param in this.params[targetIndex]) {
+			this.params[targetIndex][param] += der[index] * this.DT * this.state[targetIndex];
+			if (typeof (this.paramsDelta[targetIndex]) !== 'undefined')
+				this.params[targetIndex][param] += (this.paramsDelta[targetIndex][param])*this.momentum;
 			
-			if (Math.abs(derMagn)**0.5 > this.MinDeriative) {
-				this.params[targetIndex][param] += der[index] * this.DT * this.state[targetIndex];
-			} else {
-				// this.PlaceOnRandomCover(targetIndex);
-			}
+			// if (Math.abs(derMagn)**0.5 > this.MinDeriative) {
+			// 	this.params[targetIndex][param] += der[index] * this.DT * this.state[targetIndex];
+			// } else {
+			// 	this.PlaceOnRandomCover(targetIndex);
+			// }
 			
 			index++;
 		}
@@ -168,29 +175,25 @@ class TrainableParams3 {
 			const der = this.scoreDerFunc(Object.values(this.params[i]));
 			this.IntegrateParams(der,i);
 
-			let velMag = 0, isEqual = true;
+			let velMag = 0;
 			this.pastParamsDelta[i] = {}; this.paramsDelta[i] = {};
 			for (let param in this.params[i]) {this.pastParamsDelta[i][param] = this.paramsDelta[i][param];}
 			for (let param in this.params[i]) {this.paramsDelta[i][param] = this.params[i][param]-this.pastParams[i][param];}
-			for (let param in this.params[i]) {velMag += this.paramsDelta[i][param]**2; if (isEqual && this.paramsDelta[i][param] != this.pastParamsDelta[i][param]) isEqual = false;}
+			for (let param in this.params[i]) {velMag += this.paramsDelta[i][param]**2;}
 			velMag = Math.sqrt(velMag);
 
-			if (isEqual) {
-				this.PlaceOnRandomCover(i);
-				console.log('equal');
-			}
+			let derMagn = 0;
+			for (let param in der) derMagn += der[param]**2;
 			if (velMag < this.MinVelocity) {
-				if (!this.onExtrema) {
+				if (!this.onExtrema[i]) {//!this.onExtrema[i]
 					let coords = Object.values(this.params[i]);
 					this.AddCover(coords,coveredScore,score);
 					this.PlaceOnRandomCover(i);
-					// console.log(coveredScore,score);
 
 					this.state[i] = (this.state[i] == 1) ? -1 : 1;
-					this.onExtrema = true;
-				}
-			} else {
-				this.onExtrema = false;
+					this.onExtrema[i] = true;
+					for (let param in this.params[i]) {this.paramsDelta[i][param] = 0;}
+				} else if (derMagn**0.5 < this.MinDeriative) this.onExtrema[i] = false;
 			}
 			this.pastParams[i] = {};
 			for (let param in this.params[i]) {this.pastParams[i][param] = this.params[i][param];}
